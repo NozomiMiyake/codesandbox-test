@@ -1,8 +1,3 @@
-// セルが変更された際のフラッシュ色を標準から変更
-const style = `
-  .ag-theme-alpine .ag-cell-data-changed {
-    background-color: #ffcdd2 !important;
-  }`;
 
 // 列定義部
 {
@@ -11,26 +6,25 @@ const style = `
   editable: true,
 }
 
+// 変更行セット
+const changeset = useRef(new Set());
+
+// セル変更のイベントハンドラで変更行セットに行IDを追加する
 const onCellValueChanged = (event) => {
-  // 動的セルスタイルをセット（defaultColDefで最初に設定してしまってもいいかも）
-  event.colDef.cellStyle = (params) => {
-    if (params.data.isEdited) {
-      return { "background-color": "#ffebee" };
-    }
-  };
-  // 変更フラグを立てる
-  event.data.isEdited = true;
-  // 画面を更新するためにリフレッシュ（このタイミングで背景色が変わる）
-  event.api.refreshCells({
-    force: true,
-    columns: [event.column.colDef.field],
-    rowNodes: [event.node],
+  changeset.current.add(event.node.id);
+};
+
+const saveClicked = () => {
+  changeset.current.forEach((element) => {
+    console.log(gridApi.getRowNode(element));
+    // 保存処理が終わったら背景色のクリア処理が必要
   });
 };
 
-<style>{style}</style>  // スタイルを適用する
+<Button variant="contained" color="primary" onClick={saveClicked}>
+  save
+</Button>
+
 <AgGridReact
   onCellValueChanged={onCellValueChanged}
-  enableCellChangeFlash={true}  // フラッシュを有効化
-  cellFlashDelay={100}  // フラッシュ時間
 />
